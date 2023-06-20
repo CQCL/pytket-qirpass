@@ -1,6 +1,6 @@
 from math import pi
 import struct
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 from llvmlite.binding import (
     create_context,
@@ -217,7 +217,7 @@ def is_entry_point(function: ValueRef) -> bool:
 
 def apply_qirpass(
     qir_bitcode: bytes,
-    comp_pass: BasePass,
+    comp_pass: Optional[BasePass],
     target_1q_gates: Set[OpType],
     target_2q_gates: Set[OpType],
 ) -> bytes:
@@ -262,15 +262,16 @@ def apply_qirpass(
 
     target_gates = target_1q_gates | target_2q_gates
 
-    comp_pass = SequencePass(
+    pass_list = [] if comp_pass is None else [comp_pass]
+    pass_list.extend(
         [
-            comp_pass,
             RemoveImplicitQubitPermutation(),
             auto_rebase_pass(target_gates),
             auto_squash_pass(target_1q_gates),
             RemoveRedundancies(),
         ]
     )
+    comp_pass = SequencePass(pass_list)
 
     for function in functions:
         new_ll += "\n"
