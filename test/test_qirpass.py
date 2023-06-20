@@ -6,7 +6,7 @@ from pytket_qirpass import apply_qirpass
 from llvmlite.binding import create_context, parse_assembly, parse_bitcode, ModuleRef
 from pyqir import Context, Module
 from pytket.circuit import OpType
-from pytket.passes import FullPeepholeOptimise
+from pytket.passes import FullPeepholeOptimise, SynthesiseTK
 
 QIR_DIR = Path(__file__).parent.resolve() / "qir"
 
@@ -301,15 +301,21 @@ def verify_with_pyqir(qir_bitcode: bytes) -> None:
 
 
 def check_compilation(qir_ll_in: str) -> None:
-    qir_in = ll_to_bc(qir_ll_in)
-    qir_out = apply_qirpass(
-        qir_in,
+    passes = [
+        None,
+        SynthesiseTK(),
         FullPeepholeOptimise(target_2qb_gate=OpType.TK2, allow_swaps=False),
-        {OpType.PhasedX, OpType.Rz},
-        {OpType.ZZMax, OpType.ZZPhase},
-    )
-    verify_with_llvmlite(qir_out)
-    verify_with_pyqir(qir_out)
+    ]
+    qir_in = ll_to_bc(qir_ll_in)
+    for comp_pass in passes:
+        qir_out = apply_qirpass(
+            qir_in,
+            comp_pass,
+            {OpType.PhasedX, OpType.Rz},
+            {OpType.ZZMax, OpType.ZZPhase},
+        )
+        verify_with_llvmlite(qir_out)
+        verify_with_pyqir(qir_out)
 
 
 class TestQirPass(unittest.TestCase):
