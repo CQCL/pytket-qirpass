@@ -1,5 +1,5 @@
 [build-system]
-requires = ["flit_core >=3.8,<4"]
+requires = ["flit_core >=3.9.0,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
@@ -9,7 +9,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 classifiers = ["License :: OSI Approved :: Apache Software License"]
 dynamic = ["version", "description"]
-dependencies = ["llvmlite >= 0.39.1,<0.40", "pytket >= 1.11.1,<2"]
+dependencies = ["llvmlite >= 0.40.0,<0.41", "pytket >= 1.16.0,<2"]
 
 [project.urls]
 Home = "https://github.com/CQCL/pytket-qirpass"
