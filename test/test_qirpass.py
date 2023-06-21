@@ -306,16 +306,18 @@ def check_compilation(qir_ll_in: str) -> None:
         SynthesiseTK(),
         FullPeepholeOptimise(target_2qb_gate=OpType.TK2, allow_swaps=False),
     ]
+    gatesets2q = [
+        {OpType.ZZMax, OpType.ZZPhase},
+        {OpType.ZZMax, OpType.ZZPhase, OpType.TK2},
+    ]
     qir_in = ll_to_bc(qir_ll_in)
     for comp_pass in passes:
-        qir_out = apply_qirpass(
-            qir_in,
-            comp_pass,
-            {OpType.PhasedX, OpType.Rz},
-            {OpType.ZZMax, OpType.ZZPhase},
-        )
-        verify_with_llvmlite(qir_out)
-        verify_with_pyqir(qir_out)
+        for gateset2q in gatesets2q:
+            qir_out = apply_qirpass(
+                qir_in, comp_pass, {OpType.PhasedX, OpType.Rz}, gateset2q
+            )
+            verify_with_llvmlite(qir_out)
+            verify_with_pyqir(qir_out)
 
 
 class TestQirPass(unittest.TestCase):

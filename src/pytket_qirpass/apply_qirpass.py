@@ -40,6 +40,10 @@ opdata = {
     # Additional gates:
     "__quantum__qis__phasedx__body": (OpType.PhasedX, "double, double, %Qubit*"),
     "__quantum__qis__zzmax__body": (OpType.ZZMax, "%Qubit*, %Qubit*"),
+    "__quantum__qis__rxxyyzz__body": (
+        OpType.TK2,
+        "double, double, double, %Qubit*, %Qubit*",
+    ),
 }
 
 tk_to_qir = {optype: (name, sig) for name, (optype, sig) in opdata.items()}
