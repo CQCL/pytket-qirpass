@@ -4,7 +4,7 @@ This module provides a method to optimize QIR using pytket.
 
 ## Installation
 
-Python 3.9, 3.10 or 3.11 is required.
+Python 3.10 or 3.11 is required.
 
 To install from PyPI:
 
