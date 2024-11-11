@@ -15,8 +15,8 @@ from pytket.passes import (
     RemoveImplicitQubitPermutation,
     RemoveRedundancies,
     SequencePass,
-    auto_rebase_pass,
-    auto_squash_pass,
+    AutoRebase,
+    AutoSquash,
 )
 
 # Gates taken from https://github.com/qir-alliance/qat/blob/main/targets/target_7ee0.yaml
@@ -270,8 +270,8 @@ def apply_qirpass(
     pass_list.extend(
         [
             RemoveImplicitQubitPermutation(),
-            auto_rebase_pass(target_gates),
-            auto_squash_pass(target_1q_gates),
+            AutoRebase(target_gates),
+            AutoSquash(target_1q_gates),
             RemoveRedundancies(),
         ]
     )
