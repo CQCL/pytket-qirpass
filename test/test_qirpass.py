@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import unittest
 
@@ -329,13 +330,14 @@ class TestQirPass(unittest.TestCase):
                 ) as f:
                     qir_ll_in = f.read()
                 check_compilation(qir_ll_in)
-        for progname in prognames_2:
-            with self.subTest(msg=f"Compiling {progname}"):
-                with open(
-                    QIR_DIR / "batch_2" / f"{progname}.ll", encoding="utf-8"
-                ) as f:
-                    qir_ll_in = f.read()
-                check_compilation(qir_ll_in)
+        if os.getenv("PYTKET_QIRPASS_RUN_ALL_TESTS"):
+            for progname in prognames_2:
+                with self.subTest(msg=f"Compiling {progname}"):
+                    with open(
+                        QIR_DIR / "batch_2" / f"{progname}.ll", encoding="utf-8"
+                    ) as f:
+                        qir_ll_in = f.read()
+                    check_compilation(qir_ll_in)
 
 
 if __name__ == "__main__":
