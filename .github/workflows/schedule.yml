@@ -1,0 +1,23 @@
+name: Scheduled checks
+
+on:
+  schedule:
+    # 04:00 every Saturday morning
+    - cron: '0 4 * * 6'
+
+jobs:
+  checks:
+    name: Run slow unit tests
+    runs-on: 'ubuntu-latest'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+    - name: Install flit
+      run: pip install flit
+    - name: Install pytket-qirpass
+      run: flit install
+    - name: Run slow tests
+      run: PYTKET_QIRPASS_RUN_ALL_TESTS=1 python -m unittest test.test_qirpass
