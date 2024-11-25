@@ -1,6 +1,7 @@
 # pytket-qirpass
 
-This module provides a method to optimize QIR using pytket.
+This module provides a method to optimize QIR using pytket, and a method to
+convert QIR to pytket for simple circuits.
 
 ## Installation
 
@@ -14,7 +15,9 @@ pip install pytket-qirpass
 
 ## Usage
 
-This module provides a single function, `apply_qirpass`, which takes as input
+### Optimizing QIR with `apply_qirpass`
+
+The function `apply_qirpass` takes as input
 
 - some QIR bitcode
 - a pytket compilation pass
@@ -42,3 +45,20 @@ Both the input and the output are Python `bytes` objects.
 
 Provided the pass preserves the circuit semantics, `apply_qirpass` preserves
 the QIR semantics.
+
+### Converting QIR to pytket with `qir_to_pytket`
+
+The function `qir_to_pytket` takes as input some QIR bitcode and outputs a
+pytket circuit.
+
+For example:
+
+```python
+from pytket_qirpass import qir_to_pytket
+
+circ = qir_to_pytket(qir_bitcode=qir_in)
+```
+
+The program represented by the bitcode must consist of a single basic block
+comprised of quantum operations, i.e. `__quantum__qis__*` instructions; any
+`__quantum__rt__*` instructions are accepted but ignored.
