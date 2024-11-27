@@ -1,4 +1,5 @@
 from math import pi
+import re
 import struct
 import warnings
 
@@ -85,9 +86,48 @@ def decode_double(s: str) -> float:
         return struct.unpack("d", struct.pack("Q", n))[0]
 
 
+def qubit_from_operand(operand: ValueRef) -> Qubit:
+    optext = str(operand).split(" ")
+    assert optext[0] == "%Qubit*"
+    if optext[1] == "null":
+        assert len(optext) == 2
+        return Qubit(0)
+    else:
+        return Qubit(int(optext[3]))
+
+
+def bit_from_operand(operand: ValueRef) -> Bit:
+    optext = str(operand).split(" ")
+    assert optext[0] == "%Result*"
+    if optext[1] == "null":
+        assert len(optext) == 2
+        return Bit(0)
+    else:
+        return Bit(int(optext[3]))
+
+
+def parse_operands(operands: list[ValueRef]) -> (list[float], list[Qubit], list[Bit]):
+    params, q_args, c_args = [], [], []
+    for operand in operands:
+        typename = str(operand.type)
+        if typename == "double":
+            params.append(decode_double(str(operand)) / pi)
+        elif typename == "%Qubit*":
+            q_args.append(qubit_from_operand(operand))
+        else:
+            assert typename == "%Result*"
+            c_args.append(bit_from_operand(operand))
+    return params, q_args, c_args
+
+
+BARRIER_PATTERN = re.compile("__quantum__qis__barrier(?P<n>.*?)__body")
+GROUP_PATTERN = re.compile("__quantum__qis__group(?P<n>.*?)__body")
+ORDER_PATTERN = re.compile("__quantum__qis__order(?P<n>.*?)__body")
+
+
 def parse_instr(
     instr: ValueRef,
-) -> tuple[OpType, list[float], list[Qubit], list[Bit]] | None:
+) -> tuple[OpType, list[float], list[Qubit], list[Bit], str] | None:
     assert instr.is_instruction
     assert instr.opcode == "call"
     assert str(instr.type) == "void"
@@ -97,32 +137,47 @@ def parse_instr(
     if name.startswith("__quantum__rt__"):
         warnings.warn(f"Ignoring external call: '{name}'")
         return None
+
+    match = BARRIER_PATTERN.match(name)
+    if match is not None:
+        assert len(operands) == int(match.group("n")) + 1
+        params, q_args, c_args = parse_operands(operands[:-1])
+        assert params == []
+        return (OpType.Barrier, [], q_args, c_args, "")
+
+    match = GROUP_PATTERN.match(name)
+    if match is not None:
+        n = int(match.group("n"))
+        assert len(operands) == n + 1
+        params, q_args, c_args = parse_operands(operands[:-1])
+        assert params == []
+        assert c_args == []
+        return (OpType.Barrier, [], q_args, [], f"group{n}")
+
+    match = ORDER_PATTERN.match(name)
+    if match is not None:
+        n = int(match.group("n"))
+        assert len(operands) == n + 1
+        params, q_args, c_args = parse_operands(operands[:-1])
+        assert params == []
+        assert c_args == []
+        return (OpType.Barrier, [], q_args, [], f"order{n}")
+
+    if name == "__quantum__qis__sleep__body":
+        operand0, operand1, _ = operands
+        assert str(operand0.type) == "%Qubit*"
+        assert str(operand1.type) == "double"
+        return (
+            OpType.Barrier,
+            [],
+            [qubit_from_operand(operand0)],
+            [],
+            f"sleep({decode_double(str(operand1))})",
+        )
+
     optype, _ = opdata[name]
-    params = []
-    q_args = []
-    c_args = []
-    for operand in operands[:-1]:
-        typename = str(operand.type)
-        if typename == "double":
-            params.append(decode_double(str(operand)) / pi)
-        elif typename == "%Qubit*":
-            optext = str(operand).split(" ")
-            assert optext[0] == "%Qubit*"
-            if optext[1] == "null":
-                assert len(optext) == 2
-                q_args.append(Qubit(0))
-            else:
-                q_args.append(Qubit(int(optext[3])))
-        else:
-            assert typename == "%Result*"
-            optext = str(operand).split(" ")
-            assert optext[0] == "%Result*"
-            if optext[1] == "null":
-                assert len(optext) == 2
-                c_args.append(Bit(0))
-            else:
-                c_args.append(Bit(int(optext[3])))
-    return (optype, params, q_args, c_args)
+    params, q_args, c_args = parse_operands(operands[:-1])
+    return (optype, params, q_args, c_args, "")
 
 
 def to_circuit(instrs: list[ValueRef]) -> Circuit:
@@ -130,7 +185,7 @@ def to_circuit(instrs: list[ValueRef]) -> Circuit:
     for instr in instrs:
         data = parse_instr(instr)
         if data is not None:
-            optype, params, q_args, c_args = data
+            optype, params, q_args, c_args, barrier_data = data
             for q in q_args:
                 circuit.add_qubit(q, reject_dups=False)
             for c in c_args:
@@ -138,5 +193,8 @@ def to_circuit(instrs: list[ValueRef]) -> Circuit:
             args: list[UnitID] = []
             args.extend(q_args)
             args.extend(c_args)
-            circuit.add_gate(optype, params, args)
+            if optype == OpType.Barrier:
+                circuit.add_barrier(units=args, data=barrier_data)
+            else:
+                circuit.add_gate(optype, params, args)
     return circuit

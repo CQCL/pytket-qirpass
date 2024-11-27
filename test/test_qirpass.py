@@ -420,6 +420,51 @@ class TestQirPass(unittest.TestCase):
                     .Rx(0.5 / pi, 1)
                     .Measure(1, 1),
                 )
+        with self.subTest(msg="Converting barriers and special instructions"):
+            qir_ll_in = """
+%Qubit = type opaque
+%Result = type opaque
+
+define void @main() #0 {
+entry:
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__barrier1__body(%Qubit* null)
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__sleep__body(%Qubit* null, double 1.000000e+04)
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__group1__body(%Qubit* null)
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__order1__body(%Qubit* null)
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__mz__body(%Qubit* null, %Result* null)
+  ret void
+}
+
+declare void @__quantum__qis__h__body(%Qubit*)
+declare void @__quantum__qis__barrier1__body(%Qubit*)
+declare void @__quantum__qis__sleep__body(%Qubit*, double)
+declare void @__quantum__qis__group1__body(%Qubit*)
+declare void @__quantum__qis__order1__body(%Qubit*)
+declare void @__quantum__qis__mz__body(%Qubit*, %Result*)
+
+attributes #0 = { "EntryPoint" "requiredQubits"="1" "requiredResults"="1" }
+"""
+            qir_in = ll_to_bc(qir_ll_in)
+            circ = qir_to_pytket(qir_in)
+            self.assertEqual(
+                circ,
+                Circuit(1, 1)
+                .H(0)
+                .add_barrier([0])
+                .H(0)
+                .add_barrier([0], data="sleep(10000.0)")
+                .H(0)
+                .add_barrier([0], data="group1")
+                .H(0)
+                .add_barrier([0], data="order1")
+                .H(0)
+                .Measure(0, 0),
+            )
 
 
 if __name__ == "__main__":
