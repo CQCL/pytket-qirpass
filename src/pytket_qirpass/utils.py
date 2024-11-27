@@ -12,7 +12,10 @@ from llvmlite.binding import (  # type: ignore
 from pytket.circuit import Bit, Circuit, OpType, Qubit, UnitID
 
 opdata = {
-    # Gates taken from https://github.com/qir-alliance/qat/blob/main/targets/target_7ee0.yaml:
+    # Gates taken from:
+    # https://github.com/qir-alliance/qat/blob/main/targets/target_4bf9.yaml
+    # https://github.com/qir-alliance/qat/blob/main/targets/target_7ee0.yaml
+    # https://github.com/qir-alliance/qat/blob/main/targets/target_b340.yaml
     "__quantum__qis__cnot__body": (OpType.CX, "%Qubit*, %Qubit*"),
     "__quantum__qis__cz__body": (OpType.CZ, "%Qubit*, %Qubit*"),
     "__quantum__qis__h__body": (OpType.H, "%Qubit*"),
@@ -23,20 +26,19 @@ opdata = {
     "__quantum__qis__rz__body": (OpType.Rz, "double, %Qubit*"),
     "__quantum__qis__rzz__body": (OpType.ZZPhase, "double, %Qubit*, %Qubit*"),
     "__quantum__qis__s__body": (OpType.S, "%Qubit*"),
-    "__quantum__qis__t__body": (OpType.T, "%Qubit*"),
+    "__quantum__qis__swap__body": (OpType.SWAP, "%Qubit*"),
     "__quantum__qis__t__adj": (OpType.Tdg, "%Qubit*"),
+    "__quantum__qis__t__body": (OpType.T, "%Qubit*"),
     "__quantum__qis__x__body": (OpType.X, "%Qubit*"),
     "__quantum__qis__y__body": (OpType.Y, "%Qubit*"),
     "__quantum__qis__z__body": (OpType.Z, "%Qubit*"),
-    # Additional gates from https://github.com/qir-alliance/qat/blob/main/targets/target_4bf9.yaml:
-    "__quantum__qis__swap__body": (OpType.SWAP, "%Qubit*"),
     # Additional gates:
     "__quantum__qis__phasedx__body": (OpType.PhasedX, "double, double, %Qubit*"),
-    "__quantum__qis__zzmax__body": (OpType.ZZMax, "%Qubit*, %Qubit*"),
     "__quantum__qis__rxxyyzz__body": (
         OpType.TK2,
         "double, double, double, %Qubit*, %Qubit*",
     ),
+    "__quantum__qis__zzmax__body": (OpType.ZZMax, "%Qubit*, %Qubit*"),
 }
 
 
