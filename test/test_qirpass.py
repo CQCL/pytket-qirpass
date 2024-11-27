@@ -1,12 +1,13 @@
+from math import pi
 import os
 from pathlib import Path
 import unittest
 
-from pytket_qirpass import apply_qirpass
+from pytket_qirpass import apply_qirpass, qir_to_pytket
 
-from llvmlite.binding import create_context, parse_assembly, parse_bitcode, ModuleRef
+from llvmlite.binding import create_context, parse_assembly, parse_bitcode, ModuleRef  # type: ignore
 from pyqir import Context, Module
-from pytket.circuit import OpType
+from pytket.circuit import Circuit, OpType
 from pytket.passes import FullPeepholeOptimise, SynthesiseTK
 
 QIR_DIR = Path(__file__).parent.resolve() / "qir"
@@ -322,7 +323,7 @@ def check_compilation(qir_ll_in: str) -> None:
 
 
 class TestQirPass(unittest.TestCase):
-    def test_qirpass(self):
+    def test_apply_qirpass(self):
         for progname in prognames_1:
             with self.subTest(msg=f"Compiling {progname}"):
                 with open(
@@ -338,6 +339,132 @@ class TestQirPass(unittest.TestCase):
                     ) as f:
                         qir_ll_in = f.read()
                     check_compilation(qir_ll_in)
+
+    def test_qir_to_pytket(self):
+        with self.subTest(msg="Converting SimpleGroverBaseProfile.ll"):
+            with open(
+                QIR_DIR / "batch_1" / "SimpleGroverBaseProfile.ll", encoding="utf-8"
+            ) as f:
+                qir_ll_in = f.read()
+                qir_in = ll_to_bc(qir_ll_in)
+                circ = qir_to_pytket(qir_in)
+                self.assertEqual(
+                    circ,
+                    Circuit(3, 2)
+                    .H(0)
+                    .H(1)
+                    .X(2)
+                    .H(2)
+                    .X(0)
+                    .H(2)
+                    .Tdg(0)
+                    .Tdg(1)
+                    .CX(2, 0)
+                    .T(0)
+                    .CX(1, 2)
+                    .CX(1, 0)
+                    .T(2)
+                    .Tdg(0)
+                    .CX(1, 2)
+                    .CX(2, 0)
+                    .Tdg(2)
+                    .T(0)
+                    .CX(1, 0)
+                    .H(2)
+                    .X(0)
+                    .H(2)
+                    .X(2)
+                    .H(0)
+                    .X(0)
+                    .Z(1)
+                    .CX(0, 1)
+                    .Z(1)
+                    .X(0)
+                    .H(0)
+                    .Measure(0, 0)
+                    .Measure(1, 1),
+                )
+        with self.subTest(msg="Converting SimpleGroverSampleOptimised.ll"):
+            with open(
+                QIR_DIR / "batch_1" / "SimpleGroverSampleOptimised.ll", encoding="utf-8"
+            ) as f:
+                qir_ll_in = f.read()
+                qir_in = ll_to_bc(qir_ll_in)
+                circ = qir_to_pytket(qir_in)
+                self.assertEqual(
+                    circ,
+                    Circuit(3, 2)
+                    .Rz(3.5 / pi, 0)
+                    .Rx(2.5 / pi, 0)
+                    .Rz(0.25 / pi, 0)
+                    .Rz(3.5 / pi, 1)
+                    .Rx(3.5 / pi, 1)
+                    .Rz(0.25 / pi, 1)
+                    .Rx(1.0 / pi, 2)
+                    .CX(2, 0)
+                    .Rz(0.25 / pi, 0)
+                    .CX(1, 2)
+                    .CX(1, 0)
+                    .Rz(0.25 / pi, 2)
+                    .Rz(3.75 / pi, 0)
+                    .Rx(1.0 / pi, 0)
+                    .CX(1, 2)
+                    .Rx(0.5 / pi, 1)
+                    .Rz(3.75 / pi, 2)
+                    .Rx(1.0 / pi, 2)
+                    .CX(2, 0)
+                    .Rz(0.25 / pi, 0)
+                    .Rx(2.5 / pi, 0)
+                    .CX(1, 0)
+                    .Measure(0, 0)
+                    .Rx(0.5 / pi, 1)
+                    .Measure(1, 1),
+                )
+        with self.subTest(msg="Converting barriers and special instructions"):
+            qir_ll_in = """
+%Qubit = type opaque
+%Result = type opaque
+
+define void @main() #0 {
+entry:
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__barrier1__body(%Qubit* null)
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__sleep__body(%Qubit* null, double 1.000000e+04)
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__group1__body(%Qubit* null)
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__order1__body(%Qubit* null)
+  call void @__quantum__qis__h__body(%Qubit* null)
+  call void @__quantum__qis__mz__body(%Qubit* null, %Result* null)
+  ret void
+}
+
+declare void @__quantum__qis__h__body(%Qubit*)
+declare void @__quantum__qis__barrier1__body(%Qubit*)
+declare void @__quantum__qis__sleep__body(%Qubit*, double)
+declare void @__quantum__qis__group1__body(%Qubit*)
+declare void @__quantum__qis__order1__body(%Qubit*)
+declare void @__quantum__qis__mz__body(%Qubit*, %Result*)
+
+attributes #0 = { "EntryPoint" "requiredQubits"="1" "requiredResults"="1" }
+"""
+            qir_in = ll_to_bc(qir_ll_in)
+            circ = qir_to_pytket(qir_in)
+            self.assertEqual(
+                circ,
+                Circuit(1, 1)
+                .H(0)
+                .add_barrier([0])
+                .H(0)
+                .add_barrier([0], data="sleep(10000.0)")
+                .H(0)
+                .add_barrier([0], data="group1")
+                .H(0)
+                .add_barrier([0], data="order1")
+                .H(0)
+                .Measure(0, 0),
+            )
 
 
 if __name__ == "__main__":

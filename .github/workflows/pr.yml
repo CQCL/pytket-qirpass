@@ -6,6 +6,26 @@ on:
       - main
 
 jobs:
+  lints:
+    name: Run black, ruff and mypy checks
+    runs-on: 'ubuntu-latest'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Install flit, black, ruff and mypy
+      run: pip install flit black ruff mypy
+    - name: Run black check
+      run: black --check .
+    - name: Run ruff check
+      run: ruff check .
+    - name: Run mypy check
+      run: |
+        flit install
+        mypy .
+
   checks:
     name: Run quick unit tests
     strategy:
@@ -24,4 +44,4 @@ jobs:
     - name: Install pytket-qirpass
       run: flit install
     - name: Run quick tests
-      run: python -m unittest test.test_qirpass
+      run: python -m unittest

@@ -14,7 +14,8 @@ flit install
 To run unit tests:
 
 ```shell
-python -m unittest test.test_qirpass
+python -m unittest
 ```
 
-(These take a few minutes to run.)
+To run the full set of tests, whuich take a few minutes, run the above command
+with the environment variable `PYTKET_QIRPASS_RUN_ALL_TESTS` set.

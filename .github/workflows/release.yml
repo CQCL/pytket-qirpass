@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  release:
+    types:
+      - created
+      - edited
+
+jobs:
+  publish:
+    name: Publish to pypi
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Install flit
+      run: pip install flit
+    - name: Install pytket-qirpass
+      run: flit install
+    - name: Publish package
+      env:
+        FLIT_USERNAME: '__token__'
+        FLIT_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: flit publish

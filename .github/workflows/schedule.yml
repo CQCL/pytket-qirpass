@@ -20,4 +20,4 @@ jobs:
     - name: Install pytket-qirpass
       run: flit install
     - name: Run slow tests
-      run: PYTKET_QIRPASS_RUN_ALL_TESTS=1 python -m unittest test.test_qirpass
+      run: PYTKET_QIRPASS_RUN_ALL_TESTS=1 python -m unittest
