@@ -106,7 +106,9 @@ def bit_from_operand(operand: ValueRef) -> Bit:
         return Bit(int(optext[3]))
 
 
-def parse_operands(operands: list[ValueRef]) -> (list[float], list[Qubit], list[Bit]):
+def parse_operands(
+    operands: list[ValueRef],
+) -> tuple[list[float], list[Qubit], list[Bit]]:
     params, q_args, c_args = [], [], []
     for operand in operands:
         typename = str(operand.type)
