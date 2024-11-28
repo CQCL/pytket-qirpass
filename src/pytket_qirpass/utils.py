@@ -39,6 +39,12 @@ opdata = {
         OpType.TK2,
         "double, double, double, %Qubit*, %Qubit*",
     ),
+    "__quantum__qis__tk2__body": (
+        OpType.TK2,
+        "double, double, double, %Qubit*, %Qubit*",
+    ),
+    "__quantum__qis__u1q__body": (OpType.PhasedX, "double, double, %Qubit*"),
+    "__quantum__qis__zz__body": (OpType.ZZMax, "%Qubit*, %Qubit*"),
     "__quantum__qis__zzmax__body": (OpType.ZZMax, "%Qubit*, %Qubit*"),
 }
 
