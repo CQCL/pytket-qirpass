@@ -5,7 +5,7 @@ convert QIR to pytket for simple circuits.
 
 ## Installation
 
-Python 3.10, 3.11 or 3.12 is required.
+Python 3.10, 3.11, 3.12 or 3.13 is required.
 
 To install from PyPI:
 
