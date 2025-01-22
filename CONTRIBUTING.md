@@ -17,5 +17,5 @@ To run unit tests:
 python -m unittest
 ```
 
-To run the full set of tests, whuich take a few minutes, run the above command
+To run the full set of tests, which take a few minutes, run the above command
 with the environment variable `PYTKET_QIRPASS_RUN_ALL_TESTS` set.
