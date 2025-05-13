@@ -1,14 +1,14 @@
-from math import pi
 import re
 import struct
 import warnings
+from math import pi
 
 from llvmlite.binding import (  # type: ignore
+    ModuleRef,
+    ValueRef,
     create_context,
     parse_assembly,
     parse_bitcode,
-    ModuleRef,
-    ValueRef,
 )
 from pytket.circuit import Bit, Circuit, OpType, Qubit, UnitID
 
@@ -72,7 +72,7 @@ def is_header_line(line: str) -> bool:
     if line == "":
         return True
     words = line.split(" ")
-    return len(words) >= 3 and "=" in words[1:-1]
+    return len(words) >= 3 and "=" in words[1:-1]  # noqa: PLR2004
 
 
 def is_entry_point(function: ValueRef) -> bool:
@@ -83,7 +83,7 @@ def is_entry_point(function: ValueRef) -> bool:
 def decode_double(s: str) -> float:
     assert isinstance(s, str)
     words = s.split(" ")
-    assert len(words) == 2 and words[0] == "double"
+    assert len(words) == 2 and words[0] == "double"  # noqa: PLR2004
     encoding = words[1]
     try:
         return float(encoding)
@@ -96,20 +96,18 @@ def qubit_from_operand(operand: ValueRef) -> Qubit:
     optext = str(operand).split(" ")
     assert optext[0] == "%Qubit*"
     if optext[1] == "null":
-        assert len(optext) == 2
+        assert len(optext) == 2  # noqa: PLR2004
         return Qubit(0)
-    else:
-        return Qubit(int(optext[3]))
+    return Qubit(int(optext[3]))
 
 
 def bit_from_operand(operand: ValueRef) -> Bit:
     optext = str(operand).split(" ")
     assert optext[0] == "%Result*"
     if optext[1] == "null":
-        assert len(optext) == 2
+        assert len(optext) == 2  # noqa: PLR2004
         return Bit(0)
-    else:
-        return Bit(int(optext[3]))
+    return Bit(int(optext[3]))
 
 
 def parse_operands(
@@ -143,7 +141,7 @@ def parse_instr(
     assert len(operands) >= 1
     name = operands[-1].name
     if name.startswith("__quantum__rt__"):
-        warnings.warn(f"Ignoring external call: '{name}'")
+        warnings.warn(f"Ignoring external call: '{name}'")  # noqa: B028
         return None
 
     match = BARRIER_PATTERN.match(name)

@@ -1,14 +1,19 @@
-from math import pi
 import os
-from pathlib import Path
 import unittest
+from math import pi
+from pathlib import Path
 
-from pytket_qirpass import apply_qirpass, qir_to_pytket
-
-from llvmlite.binding import create_context, parse_assembly, parse_bitcode, ModuleRef  # type: ignore
+from llvmlite.binding import (  # type: ignore
+    ModuleRef,
+    create_context,
+    parse_assembly,
+    parse_bitcode,
+)
 from pyqir import Context, Module
 from pytket.circuit import Circuit, OpType
 from pytket.passes import FullPeepholeOptimise, SynthesiseTK
+
+from pytket_qirpass import apply_qirpass, qir_to_pytket
 
 QIR_DIR = Path(__file__).parent.resolve() / "qir"
 
@@ -341,7 +346,7 @@ class TestQirPass(unittest.TestCase):
                     check_compilation(qir_ll_in)
 
     def test_qir_to_pytket(self):
-        with self.subTest(msg="Converting SimpleGroverBaseProfile.ll"):
+        with self.subTest(msg="Converting SimpleGroverBaseProfile.ll"):  # noqa: SIM117
             with open(
                 QIR_DIR / "batch_1" / "SimpleGroverBaseProfile.ll", encoding="utf-8"
             ) as f:
@@ -384,7 +389,7 @@ class TestQirPass(unittest.TestCase):
                     .Measure(0, 0)
                     .Measure(1, 1),
                 )
-        with self.subTest(msg="Converting SimpleGroverSampleOptimised.ll"):
+        with self.subTest(msg="Converting SimpleGroverSampleOptimised.ll"):  # noqa: SIM117
             with open(
                 QIR_DIR / "batch_1" / "SimpleGroverSampleOptimised.ll", encoding="utf-8"
             ) as f:

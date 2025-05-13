@@ -1,6 +1,6 @@
-from .utils import bc_to_module, is_entry_point, to_circuit
-
 from pytket.circuit import Circuit
+
+from .utils import bc_to_module, is_entry_point, to_circuit
 
 
 def qir_to_pytket(qir_bitcode: bytes) -> Circuit:

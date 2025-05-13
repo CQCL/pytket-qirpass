@@ -1,5 +1,16 @@
-from math import pi
 import struct
+from math import pi
+
+from llvmlite.binding import ValueRef  # type: ignore
+from pytket.circuit import OpType, UnitID
+from pytket.passes import (
+    AutoRebase,
+    AutoSquash,
+    BasePass,
+    RemoveImplicitQubitPermutation,
+    RemoveRedundancies,
+    SequencePass,
+)
 
 from .utils import (
     bc_to_module,
@@ -10,19 +21,6 @@ from .utils import (
     to_circuit,
 )
 
-from llvmlite.binding import ValueRef  # type: ignore
-
-from pytket.circuit import OpType, UnitID
-from pytket.passes import (
-    BasePass,
-    RemoveImplicitQubitPermutation,
-    RemoveRedundancies,
-    SequencePass,
-    AutoRebase,
-    AutoSquash,
-)
-
-
 tk_to_qir = {optype: (name, sig) for name, (optype, sig) in opdata.items()}
 
 
@@ -30,7 +28,7 @@ def encode_double(a: float) -> str:
     assert isinstance(a, float)
     encoding = struct.unpack("Q", struct.pack("d", a))
     assert len(encoding) == 1
-    return f'double {"0x{:016X}".format(encoding[0])}'
+    return f"double {f'0x{encoding[0]:016X}'}"
 
 
 def argrep(arg: UnitID) -> str:
@@ -40,13 +38,12 @@ def argrep(arg: UnitID) -> str:
         if q == 0:
             return "%Qubit* null"
         return f"%Qubit* nonnull inttoptr (i64 {q} to %Qubit*)"
-    else:
-        assert arg.reg_name == "c"
-        assert len(arg.index) == 1
-        c = arg.index[0]
-        if c == 0:
-            return "%Result* null"
-        return f"%Result* nonnull inttoptr (i64 {c} to %Result*)"
+    assert arg.reg_name == "c"
+    assert len(arg.index) == 1
+    c = arg.index[0]
+    if c == 0:
+        return "%Result* null"
+    return f"%Result* nonnull inttoptr (i64 {c} to %Result*)"
 
 
 def is_known_type(instr: ValueRef) -> bool:
@@ -75,7 +72,7 @@ def partition_instrs(
     while (i < n_instrs) and not is_known_type(instrs[i]):
         unknown_sub_block.append(instrs[i])
         i += 1
-    return [(known_sub_block, unknown_sub_block)] + partition_instrs(instrs[i:])
+    return [(known_sub_block, unknown_sub_block)] + partition_instrs(instrs[i:])  # noqa: RUF005
 
 
 def compile_basic_block_ll(basic_block: ValueRef, comp_pass: BasePass):
@@ -178,7 +175,7 @@ def apply_qirpass(
             # This is an inline definition. There must only be one.
             assert is_entry_point(function)
             lines = str(function).split("\n")
-            assert len(lines) >= 2
+            assert len(lines) >= 2  # noqa: PLR2004
             first_line = lines[0]
             assert " #0 " in first_line and first_line.endswith("{")
             new_ll += first_line + "\n"
@@ -190,7 +187,7 @@ def apply_qirpass(
 
     # Declarations of "known" functions
     for name, (optype, sig) in opdata.items():
-        if optype in target_gates | {OpType.Measure, OpType.Reset}:
+        if optype in target_gates | {OpType.Measure, OpType.Reset}:  # noqa: SIM102
             if (
                 name in new_ll
             ):  # Skip if e.g. circuit was all classical and Qubit undeclared.
