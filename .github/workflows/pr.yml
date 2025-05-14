@@ -7,18 +7,18 @@ on:
 
 jobs:
   lints:
-    name: Run black, ruff and mypy checks
+    name: Run ruff and mypy checks
     runs-on: 'ubuntu-latest'
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
-    - name: Install flit, black, ruff and mypy
-      run: pip install flit black ruff mypy
-    - name: Run black check
-      run: black --check .
+        python-version: '3.12'
+    - name: Install flit, ruff and mypy
+      run: pip install flit ruff mypy
+    - name: Run ruff format
+      run: ruff format --check .
     - name: Run ruff check
       run: ruff check .
     - name: Run mypy check
